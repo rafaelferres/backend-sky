@@ -20,4 +20,10 @@ routes.post(
     (req: Request, res: Response) => UserController.signIn(req, res, config.jwt.secret)
 )
 
+routes.get(
+    "/user/:userID",
+    UserController.verifyBearerToken,
+    (req: Request, res: Response, next: NextFunction) => UserController.validateCredentials(req, res, next,config.jwt.secret)
+)
+
 export default routes;

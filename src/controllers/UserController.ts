@@ -9,6 +9,14 @@ import signInDTO from "../dto/signIn";
 import { IConfig } from "../interfaces";
 import { getConfig } from "../config";
 
+declare global {
+  namespace Express {
+    interface Request {
+      token?: string;
+    }
+  }
+}
+
 class UserController {
   public async checkSignUpData(
     req: Request,
@@ -68,8 +76,68 @@ class UserController {
     res: Response,
     secret: string
   ): Promise<void> {
-      console.log(req.body);
-      res.json({ status : true});
+    const user = await User.findOne({
+      email: req.body.email,
+      senha: req.body.senha,
+    });
+    if (user) {
+      var userJSON = user.toJSON();
+      userJSON.token = jwt.sign({ id: user.id }, secret, {
+        expiresIn: 1800000, // 1800000ms = 30 min
+      });
+
+      await User.updateOne(
+        { _id: user._id },
+        { $set: { token: userJSON.token, ultimo_login: Date.now() } }
+      );
+
+      delete userJSON._id;
+
+      res.status(200);
+      res.send(userJSON);
+    } else {
+      res.status(401);
+      res.send({ mensagem: "Usuário e/ou senha inválidos" });
+    }
+  }
+
+  public async verifyBearerToken(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    var bearerHeader = req.headers["authorization"];
+
+    if (bearerHeader) {
+      const bearer = bearerHeader.split(" ");
+      const bearerToken = bearer[1];
+      req.token = bearerToken;
+      next();
+    } else {
+      res.status(401);
+      res.json({
+        mensagem: "Não autorizado",
+      });
+    }
+  }
+
+  public async validateCredentials(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+    secret: string
+  ) {
+    jwt.verify(req.token, secret, async (err: any, decoded: any) => {
+      if (err) {
+        res.status(403);
+        res.json({
+          mensagem: "Sessão inválida",
+        });
+        return;
+      }
+
+      next();
+    });
   }
 }
 
