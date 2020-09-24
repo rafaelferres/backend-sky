@@ -25,7 +25,7 @@ class UserController {
       const userJSON = user.toJSON();
       delete userJSON._id;
 
-      res.status(200);
+      res.status(201);
       res.json(userJSON);
     }
   }
