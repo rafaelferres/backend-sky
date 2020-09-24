@@ -1,1 +1,1 @@
-web: yarn add sucrase -g && yarn build && node ./dist/index.js
+web: yarn build && node ./dist/index.js
