@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "nodemon src/index.ts",
     "build": "sucrase ./src -d ./dist --transforms typescript,imports",
-    "test": "jest"
+    "test": "jest",
+    "postinstall": "yarn add sucrase -g"
   },
   "devDependencies": {
     "@sucrase/jest-plugin": "^2.0.0",
